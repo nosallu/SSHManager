@@ -109,7 +109,7 @@ To make the process of building the `sessions.txt` file easier, you can use the 
 
 1. Open `example_session_file_builder.xlsx`.
 2. Fill out the required session details in each row.
-3. Copy the content of **Column D** and paste it into the `sessions.txt` file, ensuring that each session is inside `[]`.
+3. Copy the content of **Column D** and paste it into the `sessions.txt` file, ensuring the output is within `[]`.
 4. Restart the SSH Manager for the changes to take effect.
 
 ## Troubleshooting
