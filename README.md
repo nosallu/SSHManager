@@ -13,8 +13,10 @@ This project is packaged as a one-file executable (SSH Manager) using PyInstalle
 - [Features](#features)
 - [File Locations](#file-locations)
 - [Configuration](#configuration)
+- [Global Parameter for SSH Key](#global-parameter-for-ssh-key)
 - [Dependencies](#dependencies)
 - [Examples](#examples)
+- [Session File Builder](#session-file-builder)
 - [Troubleshooting](#troubleshooting)
 - [Contributors](#contributors)
 - [License](#license)
@@ -76,6 +78,11 @@ Both files can be manually modified if required, but **the app must be restarted
 - **X11 Forwarding**: Enable X11 forwarding for graphical SSH applications.
 - **Manual File Editing**: Settings and session files are stored as JSON and can be modified manually. Make sure to restart the application after manual changes.
 
+## Global Parameter for SSH Key
+
+- **Global SSH Key Parameter**: When adding a session, if you want the session to use the global SSH key configured in the settings, you can enter `global` as the value for `ssh_key_path`. This tells the SSH Manager to use the global key for this session instead of a session-specific key.
+- If the `ssh_key_path` is set to `none`, the session will not use any SSH key.
+
 ## Dependencies
 
 The app requires the following to be installed on macOS:
@@ -91,10 +98,19 @@ When you click "Add Session", you'll be prompted to enter:
 - Friendly name: e.g., "My Server"
 - Connection string: e.g., `user@192.168.1.10`
 - Category: e.g., "Work Servers"
-- SSH key path: e.g., `/Users/yourname/.ssh/id_rsa`, or `none` if no key is required.
+- SSH key path: e.g., `/Users/yourname/.ssh/id_rsa`, `global` for the global SSH key, or `none` if no key is required.
 
 ### Connecting to a Session
 Once a session is added, select it from the "Sessions" menu and click "Connect". The SSH connection will open in iTerm or Terminal based on your configuration.
+
+## Session File Builder
+
+To make the process of building the `sessions.txt` file easier, you can use the provided `example_session_file_builder.xlsx` file. This Excel file contains columns with the necessary details for each session. The content of **Column D** in the spreadsheet should be copied directly into the `sessions.txt` file, and each entry should be placed inside square brackets `[]`. This allows you to quickly create or modify session entries in bulk.
+
+1. Open `example_session_file_builder.xlsx`.
+2. Fill out the required session details in each row.
+3. Copy the content of **Column D** and paste it into the `sessions.txt` file, ensuring that each session is inside `[]`.
+4. Restart the SSH Manager for the changes to take effect.
 
 ## Troubleshooting
 
@@ -108,4 +124,5 @@ Once a session is added, select it from the "Sessions" menu and click "Connect".
 
 ## License
 
-This project is licensed under the Free License
+This project is licensed under the Free License.
+
