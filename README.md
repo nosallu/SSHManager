@@ -104,7 +104,7 @@ Once a session is added, select it from the "Sessions" menu and click "Connect".
 
 ## Contributors
 
-- **Your Name** - Initial development
+- **Lukas Nosalek** - Initial development
 
 ## License
 
