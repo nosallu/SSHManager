@@ -105,7 +105,7 @@ Once a session is added, select it from the "Sessions" menu and click "Connect".
 
 ## Session File Builder
 
-To make the process of building the `sessions.txt` file easier, you can use the provided `example_session_file_builder.xlsx` file. This Excel file contains columns with the necessary details for each session. The content of **Column D** in the spreadsheet should be copied directly into the `sessions.txt` file, and each entry should be placed inside square brackets `[]`. This allows you to quickly create or modify session entries in bulk.
+To make the process of building the `sessions.txt` file easier, you can use the provided `example_session_file_builder.xlsx` file. This Excel file contains columns with the necessary details for each session. The content of **Column D** in the spreadsheet should be copied directly into the `sessions.txt` file within square brackets `[]`. This allows you to quickly create or modify session entries in bulk.
 
 1. Open `example_session_file_builder.xlsx`.
 2. Fill out the required session details in each row.
