@@ -1,0 +1,2 @@
+# SSHManager
+SSHManager for macOS
