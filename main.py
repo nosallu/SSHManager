@@ -184,6 +184,7 @@ class SSHMenuBarApp(rumps.App):
         # Dynamically add session items
         self.refresh_sessions()
 
+
     def refresh_sessions(self):
         # Clear previous session items in "Sessions" and "Recent Sessions"
         for key in list(self.menu["Sessions"].keys()):
@@ -205,11 +206,15 @@ class SSHMenuBarApp(rumps.App):
                 categorized_sessions[category] = []
             categorized_sessions[category].append(session)
 
-        # Add each session under its respective category
+        # Add each session under its respective category, sorted alphabetically
         for category, sessions in categorized_sessions.items():
+            # Sort sessions alphabetically by friendly name
+            sorted_sessions = sorted(sessions, key=lambda s: s['friendlyname'].lower())
+            
             category_menu = rumps.MenuItem(category)
             self.menu["Sessions"].add(category_menu)
-            for session in sessions:
+            
+            for session in sorted_sessions:
                 session_menu = rumps.MenuItem(session['friendlyname'])
                 session_menu.add(rumps.MenuItem("Connect", callback=lambda sender, sess=session: self.connect_to_session(sess)))
                 session_menu.add(rumps.MenuItem("Edit", callback=lambda sender, sess=session: self.edit_session(sess)))
