@@ -3,6 +3,7 @@ import subprocess
 import json
 import rumps
 
+
 # Define the path to store settings and session files
 def get_user_data_path():
     user_documents = os.path.expanduser("~/Documents/SSH_Manager")
@@ -80,6 +81,20 @@ def load_ssh_key():
     except json.JSONDecodeError:
         return "", False
 
+def ensure_ssh_key_permissions(ssh_key_path):
+    if os.path.exists(ssh_key_path):
+        # Get the current permissions of the file
+        file_stat = os.stat(ssh_key_path)
+        file_permissions = oct(file_stat.st_mode)[-3:]
+
+        # Check if the permissions are already 600, if not, change them
+        if file_permissions != '600':
+            try:
+                os.chmod(ssh_key_path, 0o600)
+            except Exception as e:
+                print(f"Failed to set permissions for {ssh_key_path}: {str(e)}")
+
+
 # Save the global SSH key path and X11 forwarding setting
 def save_ssh_key_and_settings(ssh_key, x11_forward):
     settings_file = os.path.join(get_user_data_path(), 'settings.txt')
@@ -127,6 +142,9 @@ def scp_file_transfer(session, global_ssh_key):
             ssh_key_path = ""  # No SSH key path, will prompt for password
         elif "global" in ssh_key_path.lower():
             ssh_key_path = global_ssh_key
+        
+        if ssh_key_path:
+            ensure_ssh_key_permissions(ssh_key_path)
 
         # Build the SCP command
         scp_command = f"scp"
@@ -170,7 +188,10 @@ def connect_to_ssh(session, global_ssh_key, x11_forward, remote_command=""):
         ssh_key_path = ""  # No key option if "none"
     elif "global" in ssh_key_path.lower():
         ssh_key_path = global_ssh_key  # Use global key if specified
-    
+
+    if ssh_key_path:
+        ensure_ssh_key_permissions(ssh_key_path)
+
     # Build SSH command
     ssh_command = "ssh"
     
