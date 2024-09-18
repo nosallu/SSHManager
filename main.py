@@ -102,7 +102,63 @@ def prompt_user(prompt_message, default_value=""):
         return None  # User canceled or error occurred
     return result.stdout.strip()
 
-# SSH connection function
+# Use AppleScript to prompt file selection
+def prompt_file_choice():
+    script = '''
+    set chosenFile to choose file with prompt "Select a file for SCP transfer:"
+    POSIX path of chosenFile
+    '''
+    result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
+    
+    if result.returncode == 0:
+        return result.stdout.strip()
+    else:
+        return None
+
+# Build the SCP command and execute in iTerm or Terminal
+def scp_file_transfer(session, global_ssh_key):
+    file_path = prompt_file_choice()
+    if file_path:
+        connection_str = session['connection_string']
+        ssh_key_path = session.get('ssh_key_path', '')
+
+        # If session has no key, use the global key, or prompt for password if neither is available
+        if ssh_key_path == "none":
+            ssh_key_path = ""  # No SSH key path, will prompt for password
+        elif "global" in ssh_key_path.lower():
+            ssh_key_path = global_ssh_key
+
+        # Build the SCP command
+        scp_command = f"scp"
+        if ssh_key_path:
+            scp_command += f" -i {ssh_key_path}"
+        scp_command += f" {file_path} {connection_str}:~/"
+
+        # Execute SCP in iTerm or Terminal
+        try:
+            if os.path.exists("/Applications/iTerm.app"):
+                apple_script = f'''
+                tell application "iTerm"
+                    create window with default profile
+                    tell current session of current window
+                        write text "{scp_command}"
+                    end tell
+                end tell
+                '''
+                subprocess.run(['osascript', '-e', apple_script], check=True)
+            else:
+                apple_script = f'''
+                tell application "Terminal"
+                    do script "{scp_command}"
+                    activate
+                end tell
+                '''
+                subprocess.run(['osascript', '-e', apple_script], check=True)
+        except Exception as e:
+            rumps.alert(title="Error", message=f"Failed to open terminal: {str(e)}")
+    else:
+        rumps.alert("No file selected.")
+        
 # SSH connection function
 def connect_to_ssh(session, global_ssh_key, x11_forward, remote_command=""):
     # Get connection string
@@ -217,6 +273,7 @@ class SSHMenuBarApp(rumps.App):
             for session in sorted_sessions:
                 session_menu = rumps.MenuItem(session['friendlyname'])
                 session_menu.add(rumps.MenuItem("Connect", callback=lambda sender, sess=session: self.connect_to_session(sess)))
+                session_menu.add(rumps.MenuItem("Transfer", callback=lambda sender, sess=session: self.scp_to_session(sess)))  # Add SCP option
                 session_menu.add(rumps.MenuItem("Edit", callback=lambda sender, sess=session: self.edit_session(sess)))
                 session_menu.add(rumps.MenuItem("Remove", callback=lambda sender, sess=session: self.remove_session(sess)))
                 category_menu.add(session_menu)
@@ -227,6 +284,9 @@ class SSHMenuBarApp(rumps.App):
         update_recent_sessions(session)  # Update the recent session list
         self.recent_sessions = load_recent_sessions()  # Reload recent sessions
         self.refresh_sessions()
+
+    def scp_to_session(self, session):
+        scp_file_transfer(session, self.ssh_key)  # Perform SCP transfer to session
 
     def open_settings(self, _):
         # Prompt for SSH key path using osascript
