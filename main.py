@@ -2,6 +2,10 @@ import os
 import subprocess
 import json
 import rumps
+import threading
+import pyautogui
+import random
+from time import sleep
 
 
 # Define the path to store settings and session files
@@ -234,6 +238,11 @@ def connect_to_ssh(session, global_ssh_key, x11_forward, remote_command=""):
         rumps.alert(title="Error", message=f"Failed to open terminal: {str(e)}")
 
 
+
+
+
+
+
 # Create a class to handle the menu bar app using rumps
 class SSHMenuBarApp(rumps.App):
     def __init__(self):
@@ -241,13 +250,24 @@ class SSHMenuBarApp(rumps.App):
         self.sessions = load_sessions()
         self.recent_sessions = load_recent_sessions()  # Load recent sessions
         self.filtered_sessions = self.sessions
+        #mouse move
+        self.mouse_move_enabled = False
+        self.mouse_mover_thread = None
+
 
         # Load global SSH key and X11 forwarding settings
         self.ssh_key, self.x11_forward = load_ssh_key()
 
         # Main menu items
         self.menu.add(rumps.MenuItem("Add Session", callback=self.add_session))
-        self.menu.add(rumps.MenuItem("Settings", callback=self.open_settings))
+        # Create the settings submenu
+        settings_menu = rumps.MenuItem("Settings")
+        settings_menu.add(rumps.MenuItem("X11 Forwarding", callback=self.toggle_x11_forwarding))
+        settings_menu.add(rumps.MenuItem("Global SSH Key", callback=self.change_global_ssh_key))
+        settings_menu.add(rumps.MenuItem("Mouse Move", callback=self.toggle_mouse_movement))
+        self.menu.add(settings_menu)
+        #self.menu.add(rumps.MenuItem("Mouse Move", callback=self.toggle_mouse_movement))
+        #self.menu.add(rumps.MenuItem("Settings", callback=self.open_settings))
         self.menu.add(rumps.MenuItem("Search Sessions", callback=self.search_sessions))
 
         # Add recent sessions submenu
@@ -258,9 +278,51 @@ class SSHMenuBarApp(rumps.App):
         self.sessions_menu = rumps.MenuItem("Sessions")
         self.menu.add(self.sessions_menu)
 
+
+
         # Dynamically add session items
         self.refresh_sessions()
 
+    # Toggle X11 forwarding setting
+    def toggle_x11_forwarding(self, _):
+        self.x11_forward = not self.x11_forward
+        save_ssh_key_and_settings(self.ssh_key, self.x11_forward)
+        rumps.alert("X11 Forwarding", "Enabled" if self.x11_forward else "Disabled")
+
+    # Change the global SSH key
+    def change_global_ssh_key(self, _):
+        ssh_key = prompt_user("Enter the path to your SSH key:", default_value=self.ssh_key)
+        if ssh_key:
+            self.ssh_key = ssh_key
+            save_ssh_key_and_settings(self.ssh_key, self.x11_forward)
+            rumps.alert("Global SSH Key", f"Updated to {self.ssh_key}")
+        
+    def move_mouse(self):
+        while self.mouse_move_enabled:
+            sleep_time = random.uniform(5, 15)
+            sleep(sleep_time)
+            current_x, current_y = pyautogui.position()
+            direction = random.randint(0, 1)
+            distance = random.randint(100, 400)
+        
+            if direction == 0:
+                new_y = max(current_y - distance, 20)  # Move up
+            else:
+                new_y = min(current_y + distance, 970)  # Move down
+        
+            pyautogui.moveTo(current_x, new_y, duration=0.25)
+
+    def toggle_mouse_movement(self, _):
+        if self.mouse_move_enabled:
+            self.mouse_move_enabled = False
+            if self.mouse_mover_thread and self.mouse_mover_thread.is_alive():
+                self.mouse_mover_thread = None  # Stop the thread
+            rumps.alert("Mouse movement stopped.")
+        else:
+            self.mouse_move_enabled = True
+            self.mouse_mover_thread = threading.Thread(target=self.move_mouse)
+            self.mouse_mover_thread.start()
+            rumps.alert("Mouse movement started.")
 
     def refresh_sessions(self):
         # Clear previous session items in "Sessions" and "Recent Sessions"
